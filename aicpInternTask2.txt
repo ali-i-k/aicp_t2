@@ -1,0 +1,96 @@
+#include <iostream>
+#include <vector>
+#include <numeric>
+#include <limits>
+
+using namespace std;
+
+struct Participant {
+    string name;
+    double payment;
+};
+
+const vector<int> COACH_COSTS = {150, 190, 225};
+const vector<double> MEAL_COSTS = {14.00, 13.50, 13.00};
+const vector<double> TICKET_COSTS = {21.00, 20.00, 19.00};
+const int MIN_SENIORS = 10;
+const int MAX_SENIORS = 36;
+const int MIN_CARERS = 2;
+const int ADDITIONAL_CARERS_THRESHOLD = 24;
+
+void calculateCost(int numPeople, double& totalCost, double& costPerPerson) {
+    if (numPeople < MIN_SENIORS || numPeople > MAX_SENIORS) {
+        cout << "Invalid number of people for the outing. Must be between 10 and 36." << endl;
+        return;
+    }
+
+    int index = 0;
+    if (numPeople > 16) index = 1;
+    if (numPeople > 26) index = 2;
+
+    totalCost = COACH_COSTS[index] + (MEAL_COSTS[index] + TICKET_COSTS[index]) * numPeople;
+    costPerPerson = totalCost / numPeople;
+}
+
+void recordParticipants(int numPeople, double costPerPerson) {
+    vector<Participant> participants(numPeople + MIN_CARERS);
+
+    for (int i = 0; i < numPeople; ++i) {
+        cout << "Enter name for participant " << i + 1 << ": ";
+        cin >> participants[i].name;
+
+        cout << "Enter amount paid by " << participants[i].name << ": ";
+        cin >> participants[i].payment;
+
+        while (participants[i].payment < 0) {
+            cout << "Payment amount cannot be negative. Please re-enter amount paid by " << participants[i].name << ": ";
+            cin >> participants[i].payment;
+        }
+    }
+
+    cout << "\nList of participants:\n";
+    for (const auto& participant : participants) {
+        cout << participant.name << "\t\tPaid: Rs" << participant.payment << endl;
+    }
+
+    double totalCollected = accumulate(participants.begin(), participants.end(), 0.0,
+                                       [](double sum, const Participant& p) { return sum + p.payment; });
+
+    cout << "\nTotal amount collected: Rs" << totalCollected << endl;
+}
+
+void identifyBreakEvenOrProfit(double totalCost, double totalCollected) {
+    if (totalCollected >= totalCost) {
+        double profit = totalCollected - totalCost;
+        cout << "\nThe outing has made a profit of Rs" << profit << endl;
+    } else {
+        double loss = totalCost - totalCollected;
+        cout << "\nThe outing has not made a profit. Loss incurred: Rs" << loss << endl;
+    }
+}
+
+int main() {
+    int numPeople;
+    double totalCost, costPerPerson , totalCollected;
+
+    cout << "Enter the number of senior citizens for the outing: ";
+    cin >> numPeople;
+
+    while (cin.fail()) {
+        cout << "Invalid input. Please enter a valid integer: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin >> numPeople;
+    }
+
+    calculateCost(numPeople, totalCost, costPerPerson);
+
+    cout << "\nTotal Cost for the outing: Rs" << totalCost << endl;
+    cout << "Cost per person: Rs" << costPerPerson << endl;
+
+    recordParticipants(numPeople, costPerPerson);
+
+    identifyBreakEvenOrProfit(totalCost, totalCollected); 
+
+    return 0;
+}
